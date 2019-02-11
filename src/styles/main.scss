@@ -1,0 +1,28 @@
+@import 'reset';
+@import 'define';
+
+circle {
+  fill: $default-circle-color;
+  r: 5px;
+}
+
+svg {
+  margin-bottom: 50px;
+  overflow: visible;
+}
+
+body {
+  margin: 20px 40px;
+}
+
+table,
+th,
+td {
+  border: 1px solid $table-border-color;
+}
+
+th,
+td {
+  padding: 10px;
+  text-align: center;
+}

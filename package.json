@@ -1,0 +1,40 @@
+{
+  "name": "d3construct",
+  "version": "1.0.0",
+  "description": "Visual deconstruction of a correlation analysis using D3.",
+  "main": "src/main.js",
+  "dependencies": {
+    "d3": "^5.9.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "babel-loader": "^8.0.5",
+    "css-loader": "^2.1.0",
+    "eslint": "^5.13.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0",
+    "json-loader": "^0.5.7",
+    "node-sass": "^4.11.0",
+    "sass-lint": "^1.12.1",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.29.3",
+    "webpack-dev-server": "^3.1.14"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ricksyuan/d3construct.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ricksyuan/d3construct/issues"
+  },
+  "homepage": "https://github.com/ricksyuan/d3construct#readme"
+}
