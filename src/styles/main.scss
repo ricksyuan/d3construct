@@ -2,17 +2,20 @@
 @import 'define';
 
 circle {
-  fill: $default-circle-color;
+  fill: $circle-color--default;
   r: 5px;
   transition: r .5s linear, fill .5s linear;
 
   &:hover {
-    fill: $circle-hover-color;
+    fill: $circle-color--hover;
     r: 10;
+  }
+  &:active {
+    fill: $circle-color--active;
   }
 }
 
-svg {
+#container {
   margin-bottom: 50px;
   overflow: visible;
 }
