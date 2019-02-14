@@ -2,7 +2,6 @@
 @import 'define';
 
 circle {
-  fill: $circle-color--default;
   r: 5px;
   transition: r .5s linear, fill .5s linear;
 
@@ -10,6 +9,7 @@ circle {
     fill: $circle-color--hover;
     r: 10;
   }
+
   &:active {
     fill: $circle-color--active;
   }
@@ -18,6 +18,34 @@ circle {
 #container {
   margin-bottom: 50px;
   overflow: visible;
+}
+
+#x-axis {
+  & line {
+    stroke: $axes-color;
+  }
+
+  & path {
+    stroke: $axes-color;
+  }
+
+  & text {
+    fill: $axes-color;
+  }
+}
+
+#y-axis {
+  & line {
+    stroke: $axes-color;
+  }
+
+  & path {
+    stroke: $axes-color;
+  }
+
+  & text {
+    fill: $axes-color;
+  }
 }
 
 body {

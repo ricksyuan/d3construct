@@ -1,83 +1,45 @@
 import './styles/main.scss';
 import * as d3 from 'd3';
 
-const WIDTH = 800;
-const HEIGHT = 300;
-let runs = [
+let dataset = [
   {
     id: 1,
-    weight: 140,
-    height: 70,
+    xVar: 30,
+    yVar: 1500,
   },
   {
     id: 2,
-    weight: 150,
-    height: 72,
+    xVar: 60,
+    yVar: 2000,
   },
   {
     id: 3,
-    weight: 160,
-    height: 74,
+    xVar: 90,
+    yVar: 2500,
   },
 ];
 
-const xDomain = d3.extent(runs, datum => datum.weight);
+const WIDTH = 800;
+const HEIGHT = 300;
+const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+// Set x-scale and y-scale.
+const xDomain = d3.extent(dataset, datum => datum.xVar);
 const xScale = d3.scaleLinear()
   .range([0, WIDTH])
   .domain(xDomain);
-const yDomain = d3.extent(runs, datum => datum.height);
+const yDomain = d3.extent(dataset, datum => datum.yVar);
 const yScale = d3.scaleLinear()
   .domain(yDomain)
   .range([HEIGHT, 0]);
 
-function populateTable() {
-  const table = d3.select('tbody');
-  table.html('');
-  runs.forEach((run) => {
-    const row = table.append('tr');
-    row.append('td').html(run.id);
-    row.append('td').html(run.weight);
-    row.append('td').html(run.height);
-  });
-}
-
-function render() {
-  d3.select('#points').html('');
-  d3.select('#points').selectAll('circle')
-    .data(runs)
-    .enter()
-    .append('circle')
-    .attr('cx', datum => xScale(datum.weight))
-    .attr('cy', datum => yScale(datum.height));
-
-  populateTable();
-
-  function dragEnd(datum) {
-    const { x, y } = d3.event;
-    const weight = xScale.invert(x);
-    const height = yScale.invert(y);
-    datum.weight = weight;
-    datum.height = height;
-    populateTable();
-  }
-
-  // Drag cannot be fat arrow function.
-  function drag() {
-    const { x, y } = d3.event;
-    d3.select(this).attr('cx', x);
-    d3.select(this).attr('cy', y);
-  }
-  const dragBehavior = d3.drag()
-    .on('drag', drag)
-    .on('end', dragEnd);
-  d3.selectAll('circle').call(dragBehavior);
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  // Set container svg dimensions.
   d3.select('#container')
     .style('width', WIDTH)
     .style('height', HEIGHT);
 
+  // Set x and y axes.
   const bottomAxis = d3.axisBottom(xScale);
   d3.select('#container')
     .append('g')
@@ -90,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .attr('id', 'y-axis')
     .call(leftAxis);
 
-  // Add zoom.
+  // Add zoom and pan capabilities.
   let lastTransform = null;
   function zoomCallback() {
     lastTransform = d3.event.transform;
@@ -100,38 +62,83 @@ document.addEventListener('DOMContentLoaded', () => {
     d3.select('#y-axis')
       .call(leftAxis.scale(d3.event.transform.rescaleY(yScale)));
   }
-
   const zoom = d3.zoom()
     .on('zoom', zoomCallback);
   d3.select('#container').call(zoom);
 
-  // Add point when svg is clicked.
-  d3.select('#container').on('click', () => {
-    let x = d3.event.offsetX;
-    let y = d3.event.offsetY;
-    if (lastTransform !== null) {
-      x = lastTransform.invertX(d3.event.offsetX);
-      y = lastTransform.invertY(d3.event.offsetY);
+  function renderTable() {
+    const table = d3.select('tbody');
+    // Clear table
+    table.html('');
+    dataset.forEach((run) => {
+      const row = table.append('tr');
+      row.append('td').html(run.id);
+      row.append('td').html(run.xVar);
+      row.append('td').html(run.yVar);
+    });
+  }
+
+  function renderAll() {
+    const circles = d3.select('#points')
+      .selectAll('circle')
+      .data(dataset, datum => datum.id);
+    circles.enter().append('circle');
+    circles.exit().remove();
+
+    d3.selectAll('circle')
+      .attr('cx', datum => xScale(datum.xVar))
+      .attr('cy', datum => yScale(datum.yVar))
+      .attr('fill', datum => color(datum.id % 10));
+
+    renderTable();
+
+    // Add listener to add point when svg is clicked.
+    d3.select('#container').on('click', () => {
+      let x = d3.event.offsetX;
+      let y = d3.event.offsetY;
+      if (lastTransform !== null) {
+        x = lastTransform.invertX(d3.event.offsetX);
+        y = lastTransform.invertY(d3.event.offsetY);
+      }
+      const xVar = xScale.invert(x);
+      const yVar = yScale.invert(y);
+      const newRun = {
+        id: (dataset.length > 0) ? dataset[dataset.length - 1].id + 1 : 1,
+        xVar,
+        yVar,
+      };
+      dataset.push(newRun);
+      renderAll();
+    });
+
+    // Add listener to remove point when clicked.
+    d3.selectAll('circle').on('click', (datum) => {
+      // Prevent event from hitting svg.
+      d3.event.stopPropagation();
+      dataset = dataset.filter(run => run.id !== datum.id);
+      renderAll();
+    });
+
+    function dragEnd(datum) {
+      const { x, y } = d3.event;
+      const xVar = xScale.invert(x);
+      const yVar = yScale.invert(y);
+      datum.xVar = xVar;
+      datum.yVar = yVar;
+      renderTable();
     }
-    const weight = xScale.invert(x);
-    const height = yScale.invert(y);
 
-    const newRun = {
-      id: (runs.length > 0) ? runs[runs.length - 1].id + 1 : 1,
-      weight,
-      height,
-    };
-    runs.push(newRun);
-    render();
-  });
+    // Drag cannot be fat arrow function.
+    function drag() {
+      const { x, y } = d3.event;
+      d3.select(this).attr('cx', x);
+      d3.select(this).attr('cy', y);
+    }
+    const dragBehavior = d3.drag()
+      .on('drag', drag)
+      .on('end', dragEnd);
+    d3.selectAll('circle').call(dragBehavior);
+  }
 
-  // Remove clicked point when clicked.
-  d3.selectAll('circle').on('click', (datum) => {
-    // Prevent event from hitting svg.
-    d3.event.stopPropagation();
-    runs = runs.filter(run => run.id !== datum.id);
-    render();
-  });
-  // Draw points and table.
-  render();
+  renderAll();
 });
