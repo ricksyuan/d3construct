@@ -50,7 +50,7 @@ function render() {
     .attr('cx', datum => xScale(datum.weight))
     .attr('cy', datum => yScale(datum.height));
 
-
+  // Add point when svg is clicked.
   d3.select('svg').on('click', function () {
     const x = d3.event.offsetX;
     const y = d3.event.offsetY;
@@ -64,10 +64,13 @@ function render() {
     }
     runs.push(newRun);
     populateTable(runs);
+    render();
   });
+
+
 };
 
-function drawAxis(runs) {
+function drawAxis() {
 
   const bottomAxis = d3.axisBottom(xScale);
   const leftAxis = d3.axisLeft(yScale);
