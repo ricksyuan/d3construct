@@ -5,7 +5,7 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
   },
   devtool: 'inline-source-map',
   module: {
@@ -15,13 +15,13 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
-        }
+        },
       },
       {
         test: /\.json$/,
         use: {
           loader: 'json-loader',
-        }
+        },
       },
       {
         test: /\.(s*)css$/,
@@ -29,7 +29,7 @@ module.exports = {
           'style-loader',
           'css-loader',
           'sass-loader'],
-      }
-    ]
-  }
+      },
+    ],
+  },
 };
