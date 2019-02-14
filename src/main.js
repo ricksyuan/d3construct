@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 
 const WIDTH = 800;
 const HEIGHT = 300;
-const runs = [
+let runs = [
   {
     id: 1,
     weight: 140,
@@ -39,11 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   drawAxis(runs);
   render();
+  
 });
 
 function render() {
-
-  d3.select('svg').selectAll('circle')
+  d3.select('#points').html('');
+  d3.select('#points').selectAll('circle')
     .data(runs)
     .enter()
     .append('circle')
@@ -58,16 +59,23 @@ function render() {
     const height = yScale.invert(y);
 
     const newRun = {
-      id: runs[runs.length - 1].id + 1,
+      id: (runs.length > 0) ? runs[runs.length - 1].id + 1 : 1,
       weight: weight,
       height: height
     }
     runs.push(newRun);
-    populateTable(runs);
     render();
+    populateTable();
   });
 
-
+  // Remove clicked point when clicked.
+  d3.selectAll('circle').on('click', (datum, index) => {
+    // Prevent event from hitting svg.
+    d3.event.stopPropagation();
+    runs = runs.filter(run => run.id !== datum.id);
+    render();
+    populateTable();
+  });
 };
 
 function drawAxis() {

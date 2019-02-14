@@ -4,6 +4,12 @@
 circle {
   fill: $default-circle-color;
   r: 5px;
+  transition: r .5s linear, fill .5s linear;
+
+  &:hover {
+    fill: $circle-hover-color;
+    r: 10;
+  }
 }
 
 svg {
