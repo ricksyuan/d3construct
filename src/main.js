@@ -1,6 +1,20 @@
 import './styles/main.scss';
 import * as d3 from 'd3';
 
+const xFormatter = new Intl.NumberFormat('en-US', {
+  style: 'decimal',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+const yFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
 let dataset = [
   {
     id: 1,
@@ -35,19 +49,19 @@ const yScale = d3.scaleLinear()
 
 document.addEventListener('DOMContentLoaded', () => {
   // Set container svg dimensions.
-  d3.select('#container')
+  d3.select('.container')
     .style('width', WIDTH)
     .style('height', HEIGHT);
 
   // Set x and y axes.
   const bottomAxis = d3.axisBottom(xScale);
-  d3.select('#container')
+  d3.select('.container')
     .append('g')
     .attr('id', 'x-axis')
     .call(bottomAxis)
     .attr('transform', `translate(0, ${HEIGHT})`);
   const leftAxis = d3.axisLeft(yScale);
-  d3.select('#container')
+  d3.select('.container')
     .append('g')
     .attr('id', 'y-axis')
     .call(leftAxis);
@@ -56,30 +70,60 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastTransform = null;
   function zoomCallback() {
     lastTransform = d3.event.transform;
-    d3.select('#points').attr('transform', d3.event.transform);
-    d3.select('#x-axis')
+    d3.select('.points').attr('transform', d3.event.transform);
+    d3.select('.x-axis')
       .call(bottomAxis.scale(d3.event.transform.rescaleX(xScale)));
-    d3.select('#y-axis')
+    d3.select('.y-axis')
       .call(leftAxis.scale(d3.event.transform.rescaleY(yScale)));
   }
   const zoom = d3.zoom()
     .on('zoom', zoomCallback);
-  d3.select('#container').call(zoom);
+  d3.select('.container').call(zoom);
 
   function renderTable() {
-    const table = d3.select('tbody');
-    // Clear table
-    table.html('');
+    const tableHeader = d3.select('thead');
+    tableHeader.html('');
+    let row;
+    row = tableHeader.append('tr');
+    row.append('td').html('id');
+    row.append('td').html('Temperature (F°)');
+    row.append('td').html('Ice Cream Sales');
+    // Calculate means.
+    const meanX = d3.mean(dataset, datum => datum.xVar);
+    const meanY = d3.mean(dataset, datum => datum.yVar);
+    const stdX = d3.deviation(dataset, datum => datum.xVar);
+    const stdY = d3.deviation(dataset, datum => datum.yVar);
+
+    const tableBody = d3.select('tbody');
+    // Clear table body.
+
+    // Append means.
+    tableBody.html('');
+    row = tableBody.append('tr');
+    row.append('td').html('mean');
+    row.append('td').html(xFormatter.format(meanX));
+    row.append('td').html(yFormatter.format(meanY));
+
+    // Append standard deviations.
+    row = tableBody.append('tr');
+    row.append('td').html('st dev');
+    row.append('td').html(xFormatter.format(stdX));
+    row.append('td').html(yFormatter.format(stdY));
+
+    // Append runs.
     dataset.forEach((run) => {
-      const row = table.append('tr');
+      row = tableBody.append('tr');
       row.append('td').html(run.id);
-      row.append('td').html(run.xVar);
-      row.append('td').html(run.yVar);
+      row.append('td').html(xFormatter.format(run.xVar));
+      row.append('td').html(yFormatter.format(run.yVar));
     });
   }
 
   function renderAll() {
-    const circles = d3.select('#points')
+
+    const lines = d3.select('.xmean');
+    const lines = d3.select('.ymean');
+    const circles = d3.select('.points')
       .selectAll('circle')
       .data(dataset, datum => datum.id);
     circles.enter().append('circle');
@@ -93,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
 
     // Add listener to add point when svg is clicked.
-    d3.select('#container').on('click', () => {
+    d3.select('.container').on('click', () => {
       let x = d3.event.offsetX;
       let y = d3.event.offsetY;
       if (lastTransform !== null) {

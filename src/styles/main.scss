@@ -3,24 +3,23 @@
 
 circle {
   r: 5px;
-  transition: r .5s linear, fill .5s linear;
+  transition: r .1s linear, fill .1s linear;
 
   &:hover {
-    fill: $circle-color--hover;
     r: 10;
   }
 
   &:active {
-    fill: $circle-color--active;
+    r: 10;
   }
 }
 
-#container {
+.container {
   margin-bottom: 50px;
   overflow: visible;
 }
 
-#x-axis {
+.x-axis {
   & line {
     stroke: $axes-color;
   }
@@ -34,7 +33,7 @@ circle {
   }
 }
 
-#y-axis {
+.y-axis {
   & line {
     stroke: $axes-color;
   }
