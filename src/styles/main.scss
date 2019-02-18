@@ -70,5 +70,6 @@ td {
 }
 
 line {
-  stroke: gray;
+  stroke: $line-color;
+  stroke-width: 1px;
 }

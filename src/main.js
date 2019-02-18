@@ -1,9 +1,14 @@
 import './styles/main.scss';
 import * as d3 from 'd3';
 
+const betaFormatter = new Intl.NumberFormat('en-US', {
+  style: 'decimal',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
 const xFormatter = new Intl.NumberFormat('en-US', {
   style: 'decimal',
-  currency: 'USD',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
@@ -39,17 +44,22 @@ const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Set x-scale and y-scale.
 const xScale = d3.scaleLinear()
-  .range([0, WIDTH])
-  .domain([d3.min(dataset, datum => 0.9 * datum.xVar), d3.max(dataset, datum => 1.1 * datum.xVar)]);
+  .domain([d3.min(dataset, datum => 0.9 * datum.xVar), d3.max(dataset, datum => 1.1 * datum.xVar)])
+  .range([0, WIDTH]);
 const yScale = d3.scaleLinear()
   .domain([d3.min(dataset, datum => 0.9 * datum.yVar), d3.max(dataset, datum => 1.1 * datum.yVar)])
   .range([HEIGHT, 0]);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Set container svg dimensions.
-  d3.select('.container')
+  const container = d3.select('.container')
     .style('width', WIDTH)
     .style('height', HEIGHT);
+
+  container.append('svg')
+    .append('svg')
+    .append('g')
+    .attr('class', 'points');
 
   // Set x and y axes.
   const bottomAxis = d3.axisBottom(xScale);
@@ -87,7 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const meanY = d3.mean(dataset, datum => datum.yVar);
     const stdX = d3.deviation(dataset, datum => datum.xVar);
     const stdY = d3.deviation(dataset, datum => datum.yVar);
-    
+
+    const b1Numerator = dataset
+      .map(datum => (datum.xVar - meanX) * (datum.yVar - meanY))
+      .reduce((acc, datum) => acc + datum);
+    const b1Denominator = dataset
+      .map(datum => (datum.xVar - meanX) ** 2)
+      .reduce((acc, datum) => acc + datum);
+    const b1 = b1Numerator / b1Denominator;
+    const b0 = meanY  - b1 * meanX;
+
+    function f(x) {
+      return b0 + b1 * x;
+    }
+
     // Tie circles to dataset.
     const circles = d3.select('.points')
       .selectAll('circle')
@@ -103,18 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add line.
 
     d3.select('.points').append('line')
-      .attr('x1', xScale(meanX))
-      .attr('y1', -1000000)
-      .attr('x2', xScale(meanX))
-      .attr('y2', 1000000);
-
-    d3.select('.points').append('line')
-      .attr('x1', -1000000)
-      .attr('y1', yScale(meanY))
-      .attr('x2', 1000000)
-      .attr('y2', yScale(meanY));
+      .attr('x1', xScale(-10000))
+      .attr('y1', yScale(f(-10000)))
+      .attr('x2', xScale(10000))
+      .attr('y2', yScale(f(10000)));
 
     // Render table
+
+    const tableTitle = d3.select('.table-title');
+    tableTitle.html(`y = ${betaFormatter.format(b0)} + ${betaFormatter.format(b1)} * x`);
     const tableHeader = d3.select('thead');
     tableHeader.html('');
     let row;
@@ -128,16 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Append means.
     tableBody.html('');
-    row = tableBody.append('tr');
-    row.append('td').html('mean');
-    row.append('td').html(xFormatter.format(meanX));
-    row.append('td').html(yFormatter.format(meanY));
-
-    // Append standard deviations.
-    row = tableBody.append('tr');
-    row.append('td').html('st dev');
-    row.append('td').html(xFormatter.format(stdX));
-    row.append('td').html(yFormatter.format(stdY));
 
     // Append runs.
     dataset.forEach((run) => {
@@ -173,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Prevent event from hitting svg.
       d3.event.stopPropagation();
-      // Filter data to not include clicked point
+      // Filter data to not include clicked point.
       dataset = dataset.filter(datum => datum.id !== clickedDatum.id);
       renderAll();
     });
