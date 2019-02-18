@@ -57,17 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const bottomAxis = d3.axisBottom(xScale);
   d3.select('.container')
     .append('g')
-    .attr('id', 'x-axis')
+    .attr('class', 'x-axis')
     .call(bottomAxis)
     .attr('transform', `translate(0, ${HEIGHT})`);
   const leftAxis = d3.axisLeft(yScale);
   d3.select('.container')
     .append('g')
-    .attr('id', 'y-axis')
+    .attr('class', 'y-axis')
     .call(leftAxis);
 
   // Add zoom and pan capabilities.
   let lastTransform = null;
+
   function zoomCallback() {
     lastTransform = d3.event.transform;
     d3.select('.points').attr('transform', d3.event.transform);
@@ -76,9 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
     d3.select('.y-axis')
       .call(leftAxis.scale(d3.event.transform.rescaleY(yScale)));
   }
+
   const zoom = d3.zoom()
     .on('zoom', zoomCallback);
   d3.select('.container').call(zoom);
+
+  // Calculate means.
+  const meanX = d3.mean(dataset, datum => datum.xVar);
+  const meanY = d3.mean(dataset, datum => datum.yVar);
+  const stdX = d3.deviation(dataset, datum => datum.xVar);
+  const stdY = d3.deviation(dataset, datum => datum.yVar);
 
   function renderTable() {
     const tableHeader = d3.select('thead');
@@ -88,11 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     row.append('td').html('id');
     row.append('td').html('Temperature (F°)');
     row.append('td').html('Ice Cream Sales');
-    // Calculate means.
-    const meanX = d3.mean(dataset, datum => datum.xVar);
-    const meanY = d3.mean(dataset, datum => datum.yVar);
-    const stdX = d3.deviation(dataset, datum => datum.xVar);
-    const stdY = d3.deviation(dataset, datum => datum.yVar);
 
     const tableBody = d3.select('tbody');
     // Clear table body.
@@ -120,9 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderAll() {
-
-    const lines = d3.select('.xmean');
-    const lines = d3.select('.ymean');
+    // Set graph dimensions
+    d3.select('.container')
+      .style('width', WIDTH)
+      .style('height', HEIGHT);
+    // Tie circles to dataset.
     const circles = d3.select('.points')
       .selectAll('circle')
       .data(dataset, datum => datum.id);
@@ -146,20 +151,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const xVar = xScale.invert(x);
       const yVar = yScale.invert(y);
-      const newRun = {
+      const newDatum = {
         id: (dataset.length > 0) ? dataset[dataset.length - 1].id + 1 : 1,
         xVar,
         yVar,
       };
-      dataset.push(newRun);
+      dataset.push(newDatum);
       renderAll();
     });
 
     // Add listener to remove point when clicked.
-    d3.selectAll('circle').on('click', (datum) => {
+    d3.selectAll('circle').on('click', (clickedDatum) => {
       // Prevent event from hitting svg.
       d3.event.stopPropagation();
-      dataset = dataset.filter(run => run.id !== datum.id);
+      // Filter data to not include clicked point
+      dataset = dataset.filter(datum => datum.id !== clickedDatum.id);
       renderAll();
     });
 
