@@ -38,13 +38,11 @@ const HEIGHT = 300;
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Set x-scale and y-scale.
-const xDomain = d3.extent(dataset, datum => datum.xVar);
 const xScale = d3.scaleLinear()
   .range([0, WIDTH])
-  .domain(xDomain);
-const yDomain = d3.extent(dataset, datum => datum.yVar);
+  .domain([d3.min(dataset, datum => 0.9 * datum.xVar), d3.max(dataset, datum => 1.1 * datum.xVar)]);
 const yScale = d3.scaleLinear()
-  .domain(yDomain)
+  .domain([d3.min(dataset, datum => 0.9 * datum.yVar), d3.max(dataset, datum => 1.1 * datum.yVar)])
   .range([HEIGHT, 0]);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -82,13 +80,41 @@ document.addEventListener('DOMContentLoaded', () => {
     .on('zoom', zoomCallback);
   d3.select('.container').call(zoom);
 
-  // Calculate means.
-  const meanX = d3.mean(dataset, datum => datum.xVar);
-  const meanY = d3.mean(dataset, datum => datum.yVar);
-  const stdX = d3.deviation(dataset, datum => datum.xVar);
-  const stdY = d3.deviation(dataset, datum => datum.yVar);
+  function renderAll() {
 
-  function renderTable() {
+    // Calculate means and stdDev.
+    const meanX = d3.mean(dataset, datum => datum.xVar);
+    const meanY = d3.mean(dataset, datum => datum.yVar);
+    const stdX = d3.deviation(dataset, datum => datum.xVar);
+    const stdY = d3.deviation(dataset, datum => datum.yVar);
+    
+    // Tie circles to dataset.
+    const circles = d3.select('.points')
+      .selectAll('circle')
+      .data(dataset, datum => datum.id);
+    circles.enter().append('circle');
+    circles.exit().remove();
+
+    d3.selectAll('circle')
+      .attr('cx', datum => xScale(datum.xVar))
+      .attr('cy', datum => yScale(datum.yVar))
+      .attr('fill', datum => color(datum.id % 10));
+
+    // Add line.
+
+    d3.select('.points').append('line')
+      .attr('x1', xScale(meanX))
+      .attr('y1', -1000000)
+      .attr('x2', xScale(meanX))
+      .attr('y2', 1000000);
+
+    d3.select('.points').append('line')
+      .attr('x1', -1000000)
+      .attr('y1', yScale(meanY))
+      .attr('x2', 1000000)
+      .attr('y2', yScale(meanY));
+
+    // Render table
     const tableHeader = d3.select('thead');
     tableHeader.html('');
     let row;
@@ -120,29 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
       row.append('td').html(xFormatter.format(run.xVar));
       row.append('td').html(yFormatter.format(run.yVar));
     });
-  }
-
-  function renderAll() {
-    // Set graph dimensions
-    d3.select('.container')
-      .style('width', WIDTH)
-      .style('height', HEIGHT);
-    // Tie circles to dataset.
-    const circles = d3.select('.points')
-      .selectAll('circle')
-      .data(dataset, datum => datum.id);
-    circles.enter().append('circle');
-    circles.exit().remove();
-
-    d3.selectAll('circle')
-      .attr('cx', datum => xScale(datum.xVar))
-      .attr('cy', datum => yScale(datum.yVar))
-      .attr('fill', datum => color(datum.id % 10));
-
-    renderTable();
 
     // Add listener to add point when svg is clicked.
     d3.select('.container').on('click', () => {
+      d3.selectAll('line').remove();
       let x = d3.event.offsetX;
       let y = d3.event.offsetY;
       if (lastTransform !== null) {
@@ -162,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add listener to remove point when clicked.
     d3.selectAll('circle').on('click', (clickedDatum) => {
+      d3.selectAll('line').remove();
+
       // Prevent event from hitting svg.
       d3.event.stopPropagation();
       // Filter data to not include clicked point
@@ -170,12 +179,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function dragEnd(datum) {
+      d3.selectAll('line').remove();
       const { x, y } = d3.event;
       const xVar = xScale.invert(x);
       const yVar = yScale.invert(y);
       datum.xVar = xVar;
       datum.yVar = yVar;
-      renderTable();
+      renderAll();
     }
 
     // Drag cannot be fat arrow function.
@@ -184,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
       d3.select(this).attr('cx', x);
       d3.select(this).attr('cy', y);
     }
+
     const dragBehavior = d3.drag()
       .on('drag', drag)
       .on('end', dragEnd);
