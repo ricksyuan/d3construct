@@ -1,6 +1,9 @@
 # d3construct
 Visual deconstruction of data and algorithms using D3.
 
+### Live Site
+[d3construct.io](https://www.d3construct.io)
+
 ### Background
 
 Linear regression is a common statistical technique used to make predictions given an input variable. For example, one might predict the amount of ice cream sales based off temperature.
@@ -14,7 +17,6 @@ D3construct is an interactive tool allowing users to visualize data and algorith
 - [ ] Visualize the difference between the predicted line and plotted points
 - [ ] Drag points to new locations
 - [ ] Remove points by clicking on them
-errors
 
 ### Architecture and Technologies
 
