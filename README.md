@@ -1,45 +1,60 @@
 # d3construct
 Visual deconstruction of data and algorithms using D3.
+![Top Questions](d3construct.png?raw=true "Top Questions")
 
-### Live Site
-[www.d3construct.io](https://www.d3construct.io)
+### [Live Site](https://www.d3construct.io)
 
 ### Background
 
 Linear regression is a common statistical technique used to make predictions given an input variable. For example, one might predict the amount of ice cream sales based off temperature.
 
-### Functionality & MVP
+### Functionality
 
 D3construct is an interactive tool allowing users to visualize data and algorithms. For a linear regression, the user is able to:
 
 - [ ] Click on the scatter plot to add data
 - [ ] View the predicted line of best fit once there are two are more points
-- [ ] Visualize the difference between the predicted line and plotted points
 - [ ] Drag points to new locations
 - [ ] Remove points by clicking on them
+- [ ] Zoom and pan on the graph
 
-### Architecture and Technologies
+### Technologies
 
 This project is implemented primarily with `D3` to manipulate and render data and vanilla `Javascript`.
 
-### Implementation Timeline
 
-**Day 1**: 
-- Become familiar with D3 setup and basic manipulation of elements
+### Code Highlights
+The slope term is calculated using the following formula:
 
-**Day 2**: 
-- Show scatter plot with axes
+![](slope.gif)
 
-**Day 3**:
-- Add and remove points to scatter plot
+This was implemented in code as follows:
 
-**Day 4**:
-- Zoom and pan on graph
+```javascript
+  // Calculate means.
+  const meanX = d3.mean(dataset, datum => datum.xVar);
+  const meanY = d3.mean(dataset, datum => datum.yVar);
 
-**Day 5**:
-- Display linear regression
+  // Calculate slope.
+  const b1Numerator = dataset
+    .map(datum => (datum.xVar - meanX) * (datum.yVar - meanY))
+    .reduce((acc, datum) => acc + datum);
+  const b1Denominator = dataset
+    .map(datum => (datum.xVar - meanX) ** 2)
+    .reduce((acc, datum) => acc + datum);
+  const b1 = b1Numerator / b1Denominator;
+```
 
-### Bonus features
+The intercept term was calculated by solving for it given the predicted slope at the mean x and y values:
 
-- [ ] Have ability to view residuals
-- [ ] Allow user to provide data through csv or json format
+![](intercept.gif)
+
+This was implemented in code as follows:
+
+```javascript
+const b0 = meanY - b1 * meanX;
+```
+
+### Future features
++ Display residuals
++ Implement other algorithms

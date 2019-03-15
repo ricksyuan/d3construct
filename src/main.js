@@ -121,13 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
   d3.select('.container').call(zoom);
 
   function renderAll() {
-
-    // Calculate means and stdDev.
+    // Calculate means.
     const meanX = d3.mean(dataset, datum => datum.xVar);
     const meanY = d3.mean(dataset, datum => datum.yVar);
-    const stdX = d3.deviation(dataset, datum => datum.xVar);
-    const stdY = d3.deviation(dataset, datum => datum.yVar);
 
+    // Calculate slope.
     const b1Numerator = dataset
       .map(datum => (datum.xVar - meanX) * (datum.yVar - meanY))
       .reduce((acc, datum) => acc + datum);
@@ -135,7 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(datum => (datum.xVar - meanX) ** 2)
       .reduce((acc, datum) => acc + datum);
     const b1 = b1Numerator / b1Denominator;
-    const b0 = meanY  - b1 * meanX;
+
+    // Calculate intercept.
+    const b0 = meanY - b1 * meanX;
 
     function f(x) {
       return b0 + b1 * x;
