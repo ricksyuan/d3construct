@@ -36,6 +36,7 @@ small {
   color: inherit;
   font: inherit;
   margin: 0;
+  max-width: 800px;
   outline: 0;
   padding: 0;
   text-align: inherit;
@@ -51,4 +52,8 @@ img {
   display: block;
   height: auto;
   width: 100%;
+}
+
+i {
+  font-style: italic;
 }

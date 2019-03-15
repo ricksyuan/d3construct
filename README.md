@@ -2,7 +2,7 @@
 Visual deconstruction of data and algorithms using D3.
 
 ### Live Site
-[d3construct.io](https://www.d3construct.io)
+[www.d3construct.io](https://www.d3construct.io)
 
 ### Background
 

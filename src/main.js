@@ -38,8 +38,14 @@ let dataset = [
   },
 ];
 
-const WIDTH = 800;
-const HEIGHT = 300;
+const MARGIN = {
+  TOP: 20,
+  RIGHT: 20,
+  BOTTOM: 50,
+  LEFT: 70,
+};
+const WIDTH = 800 - MARGIN.LEFT - MARGIN.RIGHT;
+const HEIGHT = 300 - MARGIN.TOP - MARGIN.BOTTOM;
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Set x-scale and y-scale.
@@ -54,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set container svg dimensions.
   const container = d3.select('.container')
     .style('width', WIDTH)
-    .style('height', HEIGHT);
+    .style('height', HEIGHT)
+    .attr('transform', `translate(${MARGIN.LEFT},${MARGIN.TOP})`);
 
   container.append('svg')
     .append('svg')
@@ -73,6 +80,29 @@ document.addEventListener('DOMContentLoaded', () => {
     .append('g')
     .attr('class', 'y-axis')
     .call(leftAxis);
+
+  // Labels for x and y axes
+  d3.select('.container')
+    .append('text')
+    .attr('class', 'x-axis-label')
+    .attr('transform', `translate(${WIDTH / 2},${HEIGHT + 40})`)
+    .style('text-anchor', 'middle')
+    .text('Temperature (F°)');
+
+  d3.select('.container')
+    .append('text')
+    .attr('class', 'y-axis-label')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - MARGIN.LEFT)
+    .attr('x', 0 - (HEIGHT / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text('Ice Cream Sales ($)');
+
+  // Define the div for the tooltip
+  const tooltip = d3.select('body').append('div')
+    .attr('class', 'tooltip')
+    .style('opacity', 0);
 
   // Add zoom and pan capabilities.
   let lastTransform = null;
@@ -115,7 +145,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const circles = d3.select('.points')
       .selectAll('circle')
       .data(dataset, datum => datum.id);
-    circles.enter().append('circle');
+    circles.enter().append('circle')
+      .on('mouseover', (datum) => {
+        tooltip.transition()
+          .duration(200)
+          .style('opacity', 0.9);
+        tooltip.html(`${xFormatter.format(datum.xVar)}°F <br/> ${yFormatter.format(datum.yVar)}`)
+          .style('left', `${d3.event.pageX + 12}px`)
+          .style('top', `${d3.event.pageY - 28}px`);
+      })
+      .on('mouseout', () => {
+        tooltip.transition()
+          .duration(500)
+          .style('opacity', 0);
+      });
+
     circles.exit().remove();
 
     d3.selectAll('circle')
@@ -133,29 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render table
 
-    const tableTitle = d3.select('.table-title');
-    tableTitle.html(`y = ${betaFormatter.format(b0)} + ${betaFormatter.format(b1)} * x`);
-    const tableHeader = d3.select('thead');
-    tableHeader.html('');
-    let row;
-    row = tableHeader.append('tr');
-    row.append('td').html('id');
-    row.append('td').html('Temperature (F°)');
-    row.append('td').html('Ice Cream Sales');
-
-    const tableBody = d3.select('tbody');
-    // Clear table body.
-
-    // Append means.
-    tableBody.html('');
-
-    // Append runs.
-    dataset.forEach((run) => {
-      row = tableBody.append('tr');
-      row.append('td').html(run.id);
-      row.append('td').html(xFormatter.format(run.xVar));
-      row.append('td').html(yFormatter.format(run.yVar));
-    });
+    const equation = d3.select('.equation');
+    equation.html(`<i>y</i> = ${betaFormatter.format(b0)} ${b1 >= 0 ? '+' : '-'} ${betaFormatter.format(Math.abs(b1))} <i>x</i>`);
 
     // Add listener to add point when svg is clicked.
     d3.select('.container').on('click', () => {
@@ -181,6 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
     d3.selectAll('circle').on('click', (clickedDatum) => {
       d3.selectAll('line').remove();
 
+      // Fade tooltip
+      tooltip.transition()
+        .duration(500)
+        .style('opacity', 0);
       // Prevent event from hitting svg.
       d3.event.stopPropagation();
       // Filter data to not include clicked point.
@@ -195,6 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const yVar = yScale.invert(y);
       datum.xVar = xVar;
       datum.yVar = yVar;
+      tooltip.transition()
+        .duration(500)
+        .style('opacity', 0);
       renderAll();
     }
 
@@ -203,6 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const { x, y } = d3.event;
       d3.select(this).attr('cx', x);
       d3.select(this).attr('cy', y);
+      tooltip.html(`${xFormatter.format(xScale.invert(x))}°F <br/> ${yFormatter.format(yScale.invert(y))}`)
+        .style('left', `${d3.event.pageX + 12}px`)
+        .style('top', `${d3.event.pageY - 28}px`)
+        .style('opacity', 0.9);
     }
 
     const dragBehavior = d3.drag()
