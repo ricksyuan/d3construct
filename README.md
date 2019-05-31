@@ -1,6 +1,6 @@
 # d3construct
 Visual deconstruction of data and algorithms using D3.
-![Top Questions](d3construct.png?raw=true "Top Questions")
+![d3construct](d3construct.png?raw=true "d3construct")
 
 ### [Live Site](https://www.d3construct.io)
 
