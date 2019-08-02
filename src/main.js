@@ -20,6 +20,7 @@ const yFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
+// Seed data
 let dataset = [
   {
     id: 1,
