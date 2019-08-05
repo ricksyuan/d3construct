@@ -30,7 +30,7 @@ let dataset = [
   {
     id: 2,
     xVar: 60,
-    yVar: 2000,
+    yVar: 2200,
   },
   {
     id: 3,
@@ -43,7 +43,7 @@ const MARGIN = {
   TOP: 20,
   RIGHT: 20,
   BOTTOM: 50,
-  LEFT: 70,
+  LEFT: 70, // Allows comfortable space for y-axis labels
 };
 const WIDTH = 800 - MARGIN.LEFT - MARGIN.RIGHT;
 const HEIGHT = 300 - MARGIN.TOP - MARGIN.BOTTOM;
@@ -58,18 +58,17 @@ const yScale = d3.scaleLinear()
   .range([HEIGHT, 0]);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Set container svg dimensions.
+  // Set dimensions for container svg element.
   const container = d3.select('.container')
     .style('width', WIDTH)
     .style('height', HEIGHT)
     .attr('transform', `translate(${MARGIN.LEFT},${MARGIN.TOP})`);
 
-  container.append('svg')
-    .append('svg')
+  container.append('svg') // Append another svg for clipping.
     .append('g')
     .attr('class', 'points');
 
-  // Set x and y axes.
+  // Add x and y axes.
   const bottomAxis = d3.axisBottom(xScale);
   d3.select('.container')
     .append('g')
@@ -82,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .attr('class', 'y-axis')
     .call(leftAxis);
 
-  // Labels for x and y axes
+  // Add labels for x and y axes.
   d3.select('.container')
     .append('text')
     .attr('class', 'x-axis-label')
@@ -143,10 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Tie circles to dataset.
-    const circles = d3.select('.points')
-      .selectAll('circle')
-      .data(dataset, datum => datum.id);
-    circles.enter().append('circle')
+    const points = d3.select('.points')
+      .selectAll('.pt')
+      .data(dataset, datum => datum.id)
+      .enter()
+      .append('g')
+      .attr('class', 'pt');
+    points.append('circle')
+      .attr('cx', datum => xScale(datum.xVar))
+      .attr('cy', datum => yScale(datum.yVar))
+      .attr('fill', datum => color(datum.id % 10))
       .on('mouseover', (datum) => {
         tooltip.transition()
           .duration(200)
@@ -159,24 +164,25 @@ document.addEventListener('DOMContentLoaded', () => {
         tooltip.transition()
           .duration(500)
           .style('opacity', 0);
-      });
-
-    circles.exit().remove();
-
-    d3.selectAll('circle')
-      .attr('cx', datum => xScale(datum.xVar))
-      .attr('cy', datum => yScale(datum.yVar))
-      .attr('fill', datum => color(datum.id % 10));
+      });          
+    points.exit().remove();
 
     // Add line.
-
     d3.select('.points').append('line')
+      .attr('class', 'line-of-best-fit')
       .attr('x1', xScale(-10000))
       .attr('y1', yScale(f(-10000)))
       .attr('x2', xScale(10000))
       .attr('y2', yScale(f(10000)));
 
-    // Render table
+    // add residuals
+    d3.selectAll('.pt').append('line')      
+      .attr('x1', datum => xScale(datum.xVar))
+      .attr('y1', datum => yScale(f(datum.xVar)))
+      .attr('x2', datum => xScale(datum.xVar))
+      .attr('y2', datum => yScale(datum.yVar))      
+
+    // Render equation
 
     const equation = d3.select('.equation');
     equation.html(`<i>y</i> = ${betaFormatter.format(b0)} ${b1 >= 0 ? '+' : '-'} ${betaFormatter.format(Math.abs(b1))} <i>x</i>`);
@@ -202,8 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Add listener to remove point when clicked.
-    d3.selectAll('circle').on('click', (clickedDatum) => {
-      d3.selectAll('line').remove();
+    d3.selectAll('.pt').on('click', (clickedDatum) => {
+      d3.selectAll('.pt').remove();
+      d3.selectAll('.line-of-best-fit').remove();
 
       // Fade tooltip
       tooltip.transition()
