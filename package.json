@@ -4,7 +4,7 @@
   "description": "Visual deconstruction of a correlation analysis using D3.",
   "main": "src/main.js",
   "dependencies": {
-    "d3": "^5.9.7"
+    "d3": "^7.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
